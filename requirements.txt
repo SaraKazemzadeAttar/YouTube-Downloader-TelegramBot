@@ -1,0 +1,5 @@
+pyTelegramBotAPI==4.26.0
+pytube==15.0.0
+python-telegram-bot
+scrapeTube
+yt_dlp
