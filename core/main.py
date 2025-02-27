@@ -4,6 +4,8 @@ import yt_dlp
 from pytube import YouTube
 import logging
 import re
+from telebot.types import ChatPermissions
+import join_Channel
 
 BOT_TOKEN = os.environ.get('API_TOKEN')
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -52,17 +54,21 @@ def send_video_to_user(chat_id, file_path, title , message_id):
     
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
+    if not join_Channel.is_member(bot ,message):  # Check if user is in the channel
+        return
     bot.reply_to(
-        message,"👋 Hello!\n Send me a **YouTube link**, and I'll download the video for you.🎥 ",
+        message, "👋 Hello!\n Send me a **YouTube link**, and I'll download the video for you.🎥 ",
         parse_mode="Markdown",
     )
 
 @bot.message_handler(func=lambda message: re.match(r"^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/", message.text))
 def handle_video_request(message):
+    if not join_Channel.is_member(bot ,message):  # Ensure user is a member before processing
+        return
+
     url = message.text
     fetching_msg = bot.send_message(message.chat.id, "🔍 Fetching video details...")
     bot.delete_message(message.chat.id, fetching_msg.message_id, timeout=50)
-
 
     file_path = os.path.join(DOWNLOAD_DIR, "downloaded_video.mp4")
 
@@ -81,6 +87,5 @@ def handle_video_request(message):
 
     except Exception as e:
         bot.send_message(message.chat.id, f"❌ Unexpected error: `{e}`", parse_mode="Markdown")
-
 
 bot.infinity_polling()
